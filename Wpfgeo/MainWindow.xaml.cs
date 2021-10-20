@@ -61,32 +61,36 @@ namespace Wpfgeo
                 File.WriteAllText(@"D:\map.json", jsonString);
                 JObject openfile = JsonConvert.DeserializeObject<JObject>(jsonString);
 
-                string сoordinates = Convert.ToString(openfile["features"][0]["geometry"]["coordinates"]);
+                //string сoordinates = Convert.ToString(openfile["features"][0]["geometry"]["coordinates"]);
                 Regex regex = new Regex(@"([\d.]+)");
-                List<string> PointСollection = regex.Matches(сoordinates).Cast<Match>().Select(match => match.Value).ToList();
                 List<PointLatLng> points = new List<PointLatLng>();
+                List<string> PointСollection;
                 int frequency = 2;
                 if (comboBox.Text != "")
                 {
                     frequency = Convert.ToInt32(comboBox.Text);
                 }
-                for (int i = 0; i < PointСollection.Count - 1; i += frequency)
-                {
-                    points.Add(new PointLatLng(double.Parse(PointСollection[i + 1], CultureInfo.InvariantCulture),
-                                               double.Parse(PointСollection[i], CultureInfo.InvariantCulture)));
-                }
 
-                if (PointСollection.Count > 8)
+                int g = openfile["features"][0]["geometry"]["coordinates"].Count();
+                MapView.Markers.Clear();
+                for (int i = 0; i < g; i ++)
                 {
-                    MapView.Markers.Clear();
+                    string сoordinates = Convert.ToString(openfile["features"][0]["geometry"]["coordinates"][i]);
+                    PointСollection = regex.Matches(сoordinates).Cast<Match>().Select(match => match.Value).ToList();
+                    for (int j = 0; j < PointСollection.Count - 1; j += frequency)
+                    {
+                        points.Add(new PointLatLng(double.Parse(PointСollection[j + 1], CultureInfo.InvariantCulture),
+                                                   double.Parse(PointСollection[j], CultureInfo.InvariantCulture)));
+                    }
                     GMapPolygon mapPolygon = new GMapPolygon(points);
+                    MapView.Position = new GMap.NET.PointLatLng(points[0].Lat, points[0].Lng);
+                    points.Clear();
                     MapView.RegenerateShape(mapPolygon);
                     (mapPolygon.Shape as System.Windows.Shapes.Path).Stroke = Brushes.DarkBlue;
                     (mapPolygon.Shape as System.Windows.Shapes.Path).StrokeThickness = 1.5;
                     (mapPolygon.Shape as System.Windows.Shapes.Path).Effect = null;
                     MapView.Markers.Add(mapPolygon);
-                }
-                MapView.Position = new GMap.NET.PointLatLng(points[0].Lat, points[0].Lng);
+                }                
             }
         }
 
